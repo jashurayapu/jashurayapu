@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog Website</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Welcome to Our Blog</h1>
+        </div>
+    </header>
+    
+    <main>
+        <div class="container">
+            <section id="blog-list">
+                <!-- Blog posts will be dynamically added here -->
+            </section>
+        </div>
+    </main>
+    
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 Blog Website. All rights reserved.</p>
+        </div>
+    </footer>
+    
+    <script src="script.js"></script>
+</body>
+</html>
+
+//css
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+header {
+    background-color: #333;
+    color: #fff;
+    padding: 10px 0;
+    text-align: center;
+}
+
+header h1 {
+    margin: 0;
+}
+
+main {
+    padding: 20px 0;
+}
+
+footer {
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    padding: 10px 0;
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+}
+
+//node js:
+const express = require('express');
+const mongoose = require('mongoose');
+const bodyParser = require('body-parser');
+const path = require('path');
+
+const app = express();
+
+// Body parser middleware
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+
+// MongoDB connection
+mongoose.connect('mongodb://localhost:27017/blogDB', {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    useCreateIndex: true
+});
+const db = mongoose.connection;
+db.once('open', () => console.log('Connected to MongoDB'));
+
+// Blog post schema and model
+const postSchema = new mongoose.Schema({
+    title: String,
+    content: String,
+    createdAt: { type: Date, default: Date.now }
+});
+const Post = mongoose.model('Post', postSchema);
+
+// Serve static files (HTML, CSS, JS)
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Route to get all blog posts
+app.get('/api/posts', (req, res) => {
+    Post.find({})
+        .sort({ createdAt: -1 })
+        .then(posts => res.json(posts))
+        .catch(err => res.status(500).send('Error fetching posts'));
+});
+
+// Route to create a new blog post
+app.post('/api/posts', (req, res) => {
+    const newPost = new Post({
+        title: req.body.title,
+        content: req.body.content
+    });
+
+    newPost.save()
+        .then(() => res.status(201).send('Post created successfully'))
+        .catch(err => {
+            console.error(err);
+            res.status(500).send('Error creating post');
+        });
+});
+
+// Server listening
+const port = 3000;
+app.listen(port, () => console.log(`Server running on port ${port}`));
+
+//mango db:
+document.addEventListener('DOMContentLoaded', () => {
+    fetch('/api/posts')
+        .then(response => response.json())
+        .then(posts => {
+            const blogList = document.getElementById('blog-list');
+            posts.forEach(post => {
+                const postElement = document.createElement('article');
+                postElement.innerHTML = `
+                    <h2>${post.title}</h2>
+                    <p>${post.content}</p>
+                    <p><small>Published on ${new Date(post.createdAt).toLocaleDateString()}</small></p>
+                    <hr>
+                `;
+                blogList.appendChild(postElement);
+            });
+        })
+        .catch(error => console.error('Error fetching posts:', error));
+});
+//FORM FOR WRITING POST:
+<section id="post-form">
+    <h2>Create a New Post</h2>
+    <form id="createPostForm">
+        <label for="title">Title:</label>
+        <input type="text" id="title" name="title" required><br><br>
+
+        <label for="content">Content:</label><br>
+        <textarea id="content" name="content" rows="5" required></textarea><br><br>
+
+        <button type="submit">Submit Post</button>
+    </form>
+</section>
+// FOR SUBMISSION:
+document.getElementById('createPostForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+
+    let title = document.getElementById('title').value.trim();
+    let content = document.getElementById('content').value.trim();
+
+    if (title === '' || content === '') {
+        alert('Please fill in all fields');
+        return;
+    }
+
+    fetch('/api/posts', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ title, content })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        alert('Post created successfully');
+        document.getElementById('createPostForm').reset(); // Reset form fields
+        location.reload(); // Refresh page to display new post
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Post creation failed');
+    });
+});
