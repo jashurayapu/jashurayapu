@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Registration Form</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h2>User Registration Form</h2>
+        <form id="registrationForm">
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" required><br><br>
+
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required><br><br>
+
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required><br><br>
+
+            <button type="submit">Register</button>
+        </form>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
+
+//adding css
+.container {
+    max-width: 400px;
+    margin: 50px auto;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+label {
+    margin-bottom: 10px;
+}
+
+input {
+    padding: 8px;
+    margin-bottom: 15px;
+}
+
+button {
+    padding: 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+//nodes.js
+const express = require('express');
+const mongoose = require('mongoose');
+const bodyParser = require('body-parser');
+
+const app = express();
+
+// Body parser middleware
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+
+// MongoDB connection
+mongoose.connect('mongodb://localhost:27017/userDB', {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    useCreateIndex: true
+});
+const db = mongoose.connection;
+db.once('open', () => console.log('Connected to MongoDB'));
+
+// User schema and model
+const userSchema = new mongoose.Schema({
+    username: String,
+    email: String,
+    password: String
+});
+const User = mongoose.model('User', userSchema);
+
+// Route to handle registration form submission
+app.post('/register', (req, res) => {
+    const newUser = new User({
+        username: req.body.username,
+        email: req.body.email,
+        password: req.body.password
+    });
+
+    newUser.save()
+        .then(() => res.status(201).send('User registered successfully'))
+        .catch(err => {
+            console.error(err);
+            res.status(500).send('Error registering user');
+        });
+});
+
+// Server listening
+const port = 3000;
+app.listen(port, () => console.log(`Server running on port ${port}`));
+
+//mangodb set up
+
+document.getElementById('registrationForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+
+    let username = document.getElementById('username').value.trim();
+    let email = document.getElementById('email').value.trim();
+    let password = document.getElementById('password').value.trim();
+
+    if (username === '' || email === '' || password === '') {
+        alert('Please fill in all fields');
+        return;
+    }
+
+    // Send data to server (you can use fetch API or XMLHttpRequest)
+    fetch('/register', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ username, email, password })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network
