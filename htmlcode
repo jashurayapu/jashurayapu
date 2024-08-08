@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <tittle>friuts_names</tittle>
+</head>
+<body>
+  <section>
+<h1>mango</h1>
+<h2>apple</h2>
+<h3>grapes</h3>
+<h4>pineapple</h4>
+<h5>dragonfruit</h5>
+<h6>sapota</h6>
+  </section>
+</body>
+</html>
